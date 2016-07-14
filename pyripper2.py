@@ -18,9 +18,9 @@ def dl_instagram(cmd):
         login_data = f.readlines()
         for line in login_data:
             if line[0:10] == 'instagram:':
-                inst,usr,passw = line.split(':')
+                inst,usrn,passw = line.split(':')
         WebDriverWait(Firefox, timeout=60).until(lambda d: Firefox.find_element_by_name('username'))
-        Firefox.find_element_by_name('username').send_keys(usr)
+        Firefox.find_element_by_name('username').send_keys(usrn)
         Firefox.find_element_by_name('password').send_keys(passw)
         Firefox.find_element_by_css_selector('._o0442').click()
         WebDriverWait(Firefox, timeout=10).until(lambda d: Firefox.find_element_by_css_selector('._vbtk2'))
