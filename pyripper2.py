@@ -1,7 +1,22 @@
+# PyRipper2 v2.0.1
+
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from urllib.request import urlretrieve
 import os, re, time
+
+#todo:
+#   vsco ripper
+#       -p command
+#   -ad command
+#   queue
+#   rip date
+
+def fix_insta(imgurl):
+    imgurl = re.sub('[a-z][0-9][0-9][0-9][a-z][0-9][0-9][0-9]', '', imgurl)
+    imgurl = re.sub('e[0-9][0-9]', '', imgurl)
+    imgurl = imgurl.replace('t50.2886-16', '').replace('t51.2885-15', '').replace('t51.2885-19', '').replace('sh0.08', '')
+    return imgurl
 
 def dl_instagram(cmd):
     cmds = cmd.split(' ')
@@ -33,6 +48,7 @@ def dl_instagram(cmd):
     except:
         print('No \'Load more\' button found')
 
+    # replace w/ post count/link checker
     page_source_orig = Firefox.page_source
     Firefox.execute_script('window.scrollTo(0, 0);')
     time.sleep(0.2)
@@ -43,6 +59,7 @@ def dl_instagram(cmd):
         Firefox.execute_script('window.scrollTo(0, 0);')
         time.sleep(1)
         Firefox.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+        time.sleep(1)
         page_source_new = Firefox.page_source
         if page_source_orig == page_source_new:
             break
@@ -55,30 +72,32 @@ def dl_instagram(cmd):
         link = 'https://www.instagram.com' + link
         links.append(link)
 
-    # sometimes errors here, solution for now is just restart program
-    while postNo != len(links):
+    # still buggy, need to work on this
+    if postNo != len(links):
         print('Something went wrong! Mismatch between post count and links found')
         print(str(postNo) + ' : ' + str(len(links)))
-        Firefox.execute_script('window.scrollTo(0, 0);')
-        time.sleep(2)
-        Firefox.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-        links = []
-        for link in re.findall('/p/[0-9A-Za-z_-]*/', page_source_new):
-            link = 'https://www.instagram.com' + link
-            links.append(link)
+        
+        flag = False
+        while flag == False:
+            Firefox.execute_script('window.scrollTo(0, 0);')
+            time.sleep(1)
+            Firefox.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+            time.sleep(1)
+            links = []
+            for link in re.findall('/p/[0-9A-Za-z_-]*/', page_source_new):
+                link = 'https://www.instagram.com' + link
+                links.append(link)
+            if len(links) == postNo:
+                false = True
 
     rip_folder = 'rips\\instagram_' + usr
     if not os.path.isdir(rip_folder):
         os.mkdir(rip_folder)
-
+    
     current_date = time.strftime('%Y.%m.%d')
     fname_profile = rip_folder + '\\instagram.' + usr + '._profile.' + current_date[2:] + '.jpg'
     profile_img = Firefox.find_element_by_css_selector('._r43r5').get_attribute('src')
-    s2 = profile_img.find('/', 9)
-    s3 = profile_img.find('/', s2 + 1)
-    s4 = profile_img.find('/', s3 + 1)
-    profile_img = 'https://scontent-atl3-1.cdninstagram.com/' + profile_img[s4:]
-    profile_img = re.sub('[a-z][0-9][0-9][0-9][a-z][0-9][0-9][0-9]', '', profile_img)
+    profile_img = fix_insta(profile_img)
     print(profile_img)
     urlretrieve(profile_img, fname_profile)
 
@@ -93,11 +112,7 @@ def dl_instagram(cmd):
         if Firefox.page_source.find('video/mp4') == -1:
             img_src_start = Firefox.page_source.find('https://scontent')
             img_src_end = Firefox.page_source.find('.jpg', img_src_start) + 4
-            img_src = Firefox.page_source[img_src_start:img_src_end]
-            s2 = img_src.find('/e')
-            s3 = img_src.find('/', s2 + 1)
-            new_src = 'https://scontent-atl3-1.cdninstagram.com/' + img_src[s3:]
-            new_src = re.sub('[a-z][0-9][0-9][0-9][a-z][0-9][0-9][0-9]', '', new_src)
+            new_src = fix_insta(Firefox.page_source[img_src_start:img_src_end])
             print('(' + str(i) + '/' + str(postNo) + ') ' + new_src)
             fname = rip_folder + '\\instagram.' + usr + '.' + date + '.' + Firefox.current_url.replace('https://www.instagram.com/p/', '').replace('/', '') + '.jpg'
             if not os.path.exists(fname):
