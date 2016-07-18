@@ -1,16 +1,16 @@
-# PyRipper2 v2.0.1
+# PyRipper2 v2.0.2
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from urllib.request import urlretrieve
 import os, re, time
 
-#todo:
-#   vsco ripper
-#       -p command
-#   -ad command
-#   queue
-#   rip date
+login_method = 0
+
+config = open('config.txt').readlines()
+for line in config:
+    if line[0:13] == 'login_method=':
+        login_method = int(line[13:])
 
 def fix_insta(imgurl):
     imgurl = re.sub('[a-z][0-9][0-9][0-9][a-z][0-9][0-9][0-9]', '', imgurl)
@@ -27,17 +27,17 @@ def dl_instagram(cmd):
     page_source = Firefox.page_source
     
     if page_source.find('This Account is Private') != -1:
-        #login
         Firefox.get('https://www.instagram.com/accounts/login/')
-        f = open('logins.txt')
-        login_data = f.readlines()
-        for line in login_data:
-            if line[0:10] == 'instagram:':
-                inst,usrn,passw = line.split(':')
-        WebDriverWait(Firefox, timeout=60).until(lambda d: Firefox.find_element_by_name('username'))
-        Firefox.find_element_by_name('username').send_keys(usrn)
-        Firefox.find_element_by_name('password').send_keys(passw)
-        Firefox.find_element_by_css_selector('._o0442').click()
+        if login_method == 1:
+            for line in config:
+                if line[0:19] == 'instagram_username=':
+                    usrn = line[19:len(line)-1]
+                if line[0:19] == 'instagram_password=':
+                    passw = line[19:len(line)-1]
+            WebDriverWait(Firefox, timeout=60).until(lambda d: Firefox.find_element_by_name('username'))
+            Firefox.find_element_by_name('username').send_keys(usrn)
+            Firefox.find_element_by_name('password').send_keys(passw)
+            Firefox.find_element_by_css_selector('._o0442').click()
         WebDriverWait(Firefox, timeout=10).until(lambda d: Firefox.find_element_by_css_selector('._vbtk2'))
 
     if Firefox.current_url != profile_url:

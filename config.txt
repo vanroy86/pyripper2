@@ -1,0 +1,8 @@
+# 0 = manual login, 1 = automatic login
+login_method=0
+
+# be careful storing passwords on your computer!
+instagram_username=
+instagram_password=
+
+# end of file
